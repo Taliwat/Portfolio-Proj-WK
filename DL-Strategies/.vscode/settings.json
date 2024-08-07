@@ -1,3 +1,5 @@
 {
-    "git.ignoreLimitWarning": true
+    "git.ignoreLimitWarning": true,
+    "python.envFile": "${workspaceFolder}/.env",
+    "python.pythonPath": "C:/Users/ryanm/Desktop/Portfolio-Proj-WK/DL-Strategies/DL-Strat/Scripts/python.exe"
 }
