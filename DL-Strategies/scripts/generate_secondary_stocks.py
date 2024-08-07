@@ -30,9 +30,11 @@ def get_nasdaq100_tickers():
     return df['Ticker'].tolist()
 
 # Now from these lists let's filter for just the Technology stocks so we can use later.
-def tech_stocks_filter(tickers, valid_sectors):
+def tech_stocks_filter(tickers, valid_sectors, core_tickers):
     tech_stocks = []
     for ticker in tickers:
+        if ticker in core_tickers:
+            continue
         try:
             info = yf.Ticker(ticker).info
             sector = info.get('sector', None)
@@ -48,13 +50,16 @@ def main(config):
     max_secondary_stocks = config['yfinance']['max_secondary_stocks']
     start_date = config['yfinance']['start_date']
     end_date = config['yfinance']['end_date']
+    core_tickers = config['yfinance']['core_tickers']
+    
+    valid_sectors = CORE_SECTORS
     
     sp500_tickers = get_sp500_tickers()
     nasdaq100_tickers = get_nasdaq100_tickers()
     
     all_tickers = list(set(sp500_tickers + nasdaq100_tickers))
     
-    tech_stocks = tech_stocks_filter(all_tickers, CORE_SECTORS)
+    tech_stocks = tech_stocks_filter(all_tickers, valid_sectors, core_tickers)
     
     tech_stocks_sorted = sorted(tech_stocks, key = lambda x: x[1], reverse = True)
     

@@ -5,7 +5,7 @@ gcp:
   bucket_name: dl-strat-data
 
 yfinance:
-  core_tickers: ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA']
+  core_tickers: ['AAPL', 'MSFT', 'GOOG', 'GOOGL', 'AMZN', 'NVDA']
   start_date: '2019-01-01'
   end_date: '2024-06-30'
   fallback_start_date: '01-01-2021'
