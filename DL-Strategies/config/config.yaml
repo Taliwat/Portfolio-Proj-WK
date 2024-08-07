@@ -1,0 +1,14 @@
+#Here is our overriding settings for the GCP server and our stock information that we will be pulling.
+
+gcp:
+  project_id: algo-strategies-431715
+  bucket_name: dl-strat-data
+
+yfinance:
+  core_tickers: ['APPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA']
+  start_date: '01-01-2019'
+  end_date: '06-30-2024'
+  fallback_start_date: '01-01-2021'
+  max_secondary_stocks: 100 #Will be dynamically selected when we get to the cointegration testing.
+
+secondary_tickers_source: 

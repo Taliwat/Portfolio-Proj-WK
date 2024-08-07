@@ -5,4 +5,7 @@ seaborn
 scikit-learn
 missingno
 yfinance
-yaml
+pyyaml
+statsmodels
+pyspark
+google-cloud-storage
