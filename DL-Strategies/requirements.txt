@@ -9,3 +9,4 @@ pyyaml
 statsmodels
 pyspark
 google-cloud-storage
+ipykernel
