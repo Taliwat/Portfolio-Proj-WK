@@ -39,7 +39,11 @@ def tech_stocks_filter(tickers, valid_sectors, core_tickers):
             info = yf.Ticker(ticker).info
             sector = info.get('sector', None)
             if sector in valid_sectors:
-                tech_stocks.append((ticker, info.get('marketCap', 0)))
+                tech_stocks.append({
+                    'ticker' : ticker,
+                    'marketCap' : info.get('marketCap', 0),
+                    'PE_ratio' : info.get('forwardPE', info.get('trailingPE', None)),
+                })
         except Exception as e:
             print(f"Error processing {ticker}: {e}")
     return tech_stocks
@@ -52,24 +56,34 @@ def main(config):
     end_date = config['yfinance']['end_date']
     core_tickers = config['yfinance']['core_tickers']
     
+    
     valid_sectors = CORE_SECTORS
     
     sp500_tickers = get_sp500_tickers()
     nasdaq100_tickers = get_nasdaq100_tickers()
-    
     all_tickers = list(set(sp500_tickers + nasdaq100_tickers))
     
-    tech_stocks = tech_stocks_filter(all_tickers, valid_sectors, core_tickers)
-    
-    tech_stocks_sorted = sorted(tech_stocks, key = lambda x: x[1], reverse = True)
-    
+    tech_stocks = tech_stocks_filter(all_tickers, valid_sectors, core_tickers)    
+    tech_stocks_sorted = sorted(tech_stocks, key = lambda x: x['marketCap'], reverse = True)
     top_tech_stocks = tech_stocks_sorted[:max_secondary_stocks]
     
-    df_secondary_stocks = pd.DataFrame(top_tech_stocks, columns = ["ticker", "marketCap"])
-    df_secondary_stocks['Date'] = pd.Timestamp(end_date).strftime('%Y-%m-%d')
-    
-    df_secondary_stocks.to_csv(config['secondary_tickers_source'], index = False)
+    historical_data = {}
+    for stock in top_tech_stocks:
+        data = yf.download(stock['ticker'], start = start_date, end = end_date)[['Close', 'Volume']]
+        
+        
+        historical_data[stock['ticker']] = data
 
+
+
+    df_secondary_stocks = pd.concat(historical_data.values(), keys = historical_data.keys())
+    df_secondary_stocks.reset_index(level=1, inplace = True)
+    df_secondary_stocks['Date'] = pd.to_datetime(df_secondary_stocks['Date'])
+    print(df_secondary_stocks.head())
+    
+    df_secondary_stocks.to_csv(config['yfinance']['csv_paths']['secondary_tickers_source'])
+    
+    
 if __name__ == "__main__":
     config_path = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__),
     '..', 'config', 'config.yaml')

@@ -10,5 +10,43 @@ yfinance:
   end_date: '2024-06-30'
   fallback_start_date: '01-01-2021'
   max_secondary_stocks: 100 #Will be dynamically selected when we get to the cointegration testing.
+  exogenous_tickers:
+    unemployment_rate : ''
+    interest_rates_10yr : '^TNX'
+    gold : 'GC=F'
+    copper : 'HG=F'
+    platinum: 'PL=F'
+    silver: 'SI=F'
+    crude_oil : 'CL=F'
+    natural_gas : 'NG=F'
+    corn : 'ZC=F'
+    wheat : 'ZW=F'
+    volatility_index : '^VIX'
+    exchange_rate_usd_eur : 'EURUSD=X'
+    exchange_rate_usd_jpy : 'JPY=X'
+    sp500 : '^GSPC'
+    nasdaq_100 : '^NDX'
+    dow_jones_industrial_average : '^DJI'
+    consumer_confidence_index : 'CCI'
+    vanguard_total_world_stock_etf : 'VT'
+    us_treasury_bond_etf : 'GOVT'
+  csv_paths:
+    core_stock_data: 'data\core_stock_data.csv'
+    exogenous_data: 'data\exogenous_data.csv'
+    secondary_tickers_source: 'data\secondary_tickers_source.csv'
 
-secondary_tickers_source: 'data\secondary_tickers_source.csv'
+# Not sure if the below api keys will be needed, but below just in case for later.
+alpha_vantage:
+  api_key : 'KS7XHPA221VY38VZ'
+
+fmp:
+  api_key : 'lIKWxrwETX1CDqPkmxqq4BcshgBzqhnx'
+
+tiingo:
+  api_key: '658cee3dc474e0eb068bd2427933ae6b89cc2f7c'
+
+polygon.io:
+  api_key: 'AvguOkrKDzOv8j8xA9UyxvApYVEIeJ8b'
+
+eodhd.io:
+  api_key: ' 66bbe5beb6a1d9.26421844'

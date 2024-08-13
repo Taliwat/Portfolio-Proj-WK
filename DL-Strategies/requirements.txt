@@ -10,3 +10,5 @@ statsmodels
 pyspark
 google-cloud-storage
 ipykernel
+jupyter
+IPython
