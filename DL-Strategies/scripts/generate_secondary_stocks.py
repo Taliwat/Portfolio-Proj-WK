@@ -67,6 +67,15 @@ def calculate_indicators(df, window_sma = 50, window_ema = 50, window_rsi = 14):
     
     return df
 
+# Let's prepare a na value check and fill function to use in our main function for later.
+def fill_missing_vals(df):
+    df.isna().sum()
+    df.ffill(inplace = True)
+    df.bfill(inplace = True)
+    df.interpolate(method = 'linear', inplace = True)
+    
+    return df
+
 # Bringing it all together, let's use our previous function calls here along with the data settings in our config
 # file to create a new csv dataframe of our secondary technology stocks to be used later.
 def main(config):
@@ -136,8 +145,13 @@ def main(config):
         final_indicators_sorted = sort_indicators.sort_values(by = ['SMA', 'EMA', 'RSI'], ascending = [False, False, False])
         top_indicators = final_indicators_sorted.head(max_secondary_stocks)
         secondary_stocks_gen = df_secondary_stocks[df_secondary_stocks['ticker'].isin(top_indicators['ticker'])]
-    
+        secondary_stocks_gen = secondary_stocks_gen.iloc[49:].reset_index(drop = True)
+        secondary_stocks_gen['SMA'] = fill_missing_vals(secondary_stocks_gen['SMA'])
+        secondary_stocks_gen['RSI'] = fill_missing_vals(secondary_stocks_gen['RSI'])
+        print(secondary_stocks_gen.isna().sum())
+        
         secondary_stocks_gen.to_csv(config['yfinance']['csv_paths']['secondary_stocks_gen'])
+        
     
     
 if __name__ == "__main__":
