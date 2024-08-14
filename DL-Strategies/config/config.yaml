@@ -11,7 +11,6 @@ yfinance:
   fallback_start_date: '01-01-2021'
   max_secondary_stocks: 100 #Will be dynamically selected when we get to the cointegration testing.
   exogenous_tickers:
-    unemployment_rate : ''
     interest_rates_10yr : '^TNX'
     gold : 'GC=F'
     copper : 'HG=F'
@@ -33,7 +32,7 @@ yfinance:
   csv_paths:
     core_stock_data: 'data\core_stock_data.csv'
     exogenous_data: 'data\exogenous_data.csv'
-    secondary_tickers_source: 'data\secondary_tickers_source.csv'
+    secondary_stocks_gen: 'data\secondary_stocks_gen.csv'
 
 # Not sure if the below api keys will be needed, but below just in case for later.
 alpha_vantage:
