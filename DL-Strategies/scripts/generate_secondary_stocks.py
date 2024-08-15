@@ -150,6 +150,10 @@ def main(config):
         secondary_stocks_gen['RSI'] = fill_missing_vals(secondary_stocks_gen['RSI'])
         print(secondary_stocks_gen.isna().sum())
         
+        secondary_stocks_gen.reset_index(drop = True, inplace = True)
+        secondary_stocks_gen.set_index('Date', inplace = True)
+        print(secondary_stocks_gen.head())
+        
         secondary_stocks_gen.to_csv(config['yfinance']['csv_paths']['secondary_stocks_gen'])
         
     

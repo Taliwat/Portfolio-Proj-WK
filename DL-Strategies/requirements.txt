@@ -3,7 +3,6 @@ numpy
 matplotlib
 seaborn
 scikit-learn
-missingno
 yfinance
 pyyaml
 statsmodels
@@ -12,3 +11,4 @@ google-cloud-storage
 ipykernel
 jupyter
 IPython
+plotly
