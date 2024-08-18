@@ -57,7 +57,7 @@ def calculate_indicators(df, window_sma = 50, window_ema = 50, window_rsi = 14):
     # Relative Strength Index (RSI)    
     delta = df['Close'].diff(1)
     gain = delta.where(delta > 0, 0)
-    loss = delta.where(delta < 0, 0)
+    loss = -delta.where(delta < 0, 0)
     
     avg_gain = gain.rolling(window = window_rsi, min_periods = 1).mean()
     avg_loss = loss.rolling(window = window_rsi, min_periods = 1).mean()
