@@ -49,10 +49,10 @@ def tech_stocks_filter(tickers, valid_sectors, core_tickers):
 # Now we will calculate and create our indicators to be used in the generation and filetering of our secondary stocks.  The SMA (Simple Moving Average), EMA (Exponential Moving Average), and the RSI (Relative Strength Index).
 def calculate_indicators(df, window_sma = 50, window_ema = 50, window_rsi = 14):
     # Simple Moving Average (SMA)
-    df.loc[:, 'SMA'] = df['Close'].rolling(window = window_sma).mean()
+    df.loc[:, 'SMA_sec'] = df['Close'].rolling(window = window_sma).mean()
     
     # Exponential Moving Average (EMA)
-    df.loc[:, 'EMA'] = df['Close'].ewm(span = window_ema, adjust = False).mean()
+    df.loc[:, 'EMA_sec'] = df['Close'].ewm(span = window_ema, adjust = False).mean()
     
     # Relative Strength Index (RSI)    
     delta = df['Close'].diff(1)
@@ -63,7 +63,7 @@ def calculate_indicators(df, window_sma = 50, window_ema = 50, window_rsi = 14):
     avg_loss = loss.rolling(window = window_rsi, min_periods = 1).mean()
     
     rs = avg_gain / avg_loss
-    df.loc[:, 'RSI'] = 100 - (100 / (1 + rs))
+    df.loc[:, 'RSI_sec'] = 100 - (100 / (1 + rs))
     
     return df
 
@@ -102,27 +102,22 @@ def main(config):
             break
         
         try:
-            data = yf.download(stock['ticker'], start = start_date, end = end_date)[['Close', 'Volume']]
+            data = yf.download(stock['ticker'], start = start_date, end = end_date)[['Close', 'Volume', 'Open', 'High', 'Low']]
             if data.empty:
-                print(f"No dat available for {stock['ticker']}, skipping.")
+                print(f"No data available for {stock['ticker']}, skipping.")
                 continue
             
-            if data.index[0].strftime('%Y-%m-%d') > start_date:
-                start_date_adjusted = data.index[0].strftime('%Y-%m-%d')
-            else:
-                start_date_adjusted = start_date
+            data = calculate_indicators(data)
+            data = fill_missing_vals(data)
             
-            if data.index[-1].strftime('%Y-%m-%d') < end_date:
-                end_date_adjusted = data.index[-1].strftime('%Y-%m-%d')
-            else:
-                end_date_adjusted = end_date
+            data['Composite_Score'] = (
+                0.3 * data['Close'] +
+                0.2 * data['Volume'] +
+                0.2 * data['EMA_sec'] +
+                0.15 * data['SMA_sec'] +
+                0.15 * data['RSI_sec']
+            )
             
-            if start_date_adjusted != start_date or end_date_adjusted != end_date:
-                data = yf.download(stock['ticker'], start = start_date_adjusted, end = end_date_adjusted)[['Close', 'Volume']]
-            
-            
-            data = data.copy()
-            data = calculate_indicators(data)        
             historical_data[stock['ticker']] = data
             successful_tickers += 1
         except Exception as e:
@@ -137,21 +132,20 @@ def main(config):
         df_secondary_stocks['Date'] = pd.to_datetime(df_secondary_stocks['Date'])
     
         sort_indicators = df_secondary_stocks.groupby('ticker').agg({
-            'SMA' : 'last',
-            'EMA' : 'last',
-            'RSI' : 'last'
+            'Composite_Score' : 'last'
         }).reset_index()
     
-        final_indicators_sorted = sort_indicators.sort_values(by = ['SMA', 'EMA', 'RSI'], ascending = [False, False, False])
+        final_indicators_sorted = sort_indicators.sort_values(by = 'Composite_Score', ascending = False)
         top_indicators = final_indicators_sorted.head(max_secondary_stocks)
+        
         secondary_stocks_gen = df_secondary_stocks[df_secondary_stocks['ticker'].isin(top_indicators['ticker'])]
         secondary_stocks_gen = secondary_stocks_gen.iloc[49:].reset_index(drop = True)
-        secondary_stocks_gen['SMA'] = fill_missing_vals(secondary_stocks_gen['SMA'])
-        secondary_stocks_gen['RSI'] = fill_missing_vals(secondary_stocks_gen['RSI'])
+        
         print(secondary_stocks_gen.isna().sum())
         
         secondary_stocks_gen.reset_index(drop = True, inplace = True)
         secondary_stocks_gen.set_index('Date', inplace = True)
+        
         print(secondary_stocks_gen.head())
         
         secondary_stocks_gen.to_csv(config['yfinance']['csv_paths']['secondary_stocks_gen'])
