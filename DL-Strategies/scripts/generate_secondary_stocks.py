@@ -112,10 +112,10 @@ def main(config):
             
             data['Composite_Score'] = (
                 0.3 * data['Close'] +
-                0.2 * data['Volume'] +
-                0.2 * data['EMA_sec'] +
-                0.15 * data['SMA_sec'] +
-                0.15 * data['RSI_sec']
+                0.3 * data['EMA_sec'] +
+                0.2 * data['SMA_sec'] +
+                0.1 * data['RSI_sec'] +
+                0.1 * data['Volume']
             )
             
             historical_data[stock['ticker']] = data
