@@ -33,6 +33,7 @@ yfinance:
     core_stock_data: 'data/core_stock_data.csv'
     exogenous_data: 'data/exogenous_data.csv'
     secondary_stocks_gen: 'data/secondary_stocks_gen.csv'
+    core_stock_preprocessed: 'data/core_stock_preprocessed.csv'
 
 # Not sure if the below api keys will be needed, but below just in case for later.
 alpha_vantage:
