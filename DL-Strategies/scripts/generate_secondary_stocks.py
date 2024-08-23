@@ -7,12 +7,17 @@ import pandas as pd
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from scripts.utils import load_config
+from statsmodels.tsa.stattools import coint
 
 # core sectors are the divisions that our core stocks below belong to, just going to list them for use later.
 CORE_SECTORS = {
     'Technology',
     'Communication Services',
-    'Consumer Cyclical'
+    'Consumer Cyclical',
+    'Consumer Staples',
+    'Consumer Discretionary',
+    'Healthcare',
+    'Financials'
 }
 
 # Let's acquire our list of S&P 500 stock tickers.
@@ -111,11 +116,11 @@ def main(config):
             data = fill_missing_vals(data)
             
             data['Composite_Score'] = (
-                0.3 * data['Close'] +
-                0.3 * data['EMA_sec'] +
-                0.2 * data['SMA_sec'] +
-                0.1 * data['RSI_sec'] +
-                0.1 * data['Volume']
+                0.4 * data['EMA_sec'] +
+                0.3 * data['SMA_sec'] +
+                0.2 * data['Close'] +
+                0.05 * data['RSI_sec'] +
+                0.05 * data['Volume']
             )
             
             historical_data[stock['ticker']] = data
