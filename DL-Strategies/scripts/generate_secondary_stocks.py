@@ -9,6 +9,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from scripts.utils import load_config
 from statsmodels.tsa.stattools import coint
 
+
 # core sectors are the divisions that our core stocks below belong to, just going to list them for use later.
 CORE_SECTORS = {
     'Technology',
@@ -35,8 +36,8 @@ def get_nasdaq100_tickers():
     return df['Ticker'].tolist()
 
 # Now from these lists let's filter for just the Technology stocks so we can use later.
-def tech_stocks_filter(tickers, valid_sectors, core_tickers):
-    tech_stocks = []
+def sec_stocks_filter(tickers, valid_sectors, core_tickers):
+    sec_stocks = []
     for ticker in tickers:
         if ticker in core_tickers:
             continue
@@ -44,31 +45,98 @@ def tech_stocks_filter(tickers, valid_sectors, core_tickers):
             info = yf.Ticker(ticker).info
             sector = info.get('sector', None)
             if sector in valid_sectors:
-                tech_stocks.append({
+                sec_stocks.append({
                     'ticker' : ticker
                 })
         except Exception as e:
             print(f"Error processing {ticker}: {e}")
-    return tech_stocks
+    return sec_stocks
 
-# Now we will calculate and create our indicators to be used in the generation and filetering of our secondary stocks.  The SMA (Simple Moving Average), EMA (Exponential Moving Average), and the RSI (Relative Strength Index).
+# Now we will now extract our new features from the pandas-ta library for our technical indicators.
 def calculate_indicators(df, window_sma = 50, window_ema = 50, window_rsi = 14):
     # Simple Moving Average (SMA)
-    df.loc[:, 'SMA_sec'] = df['Close'].rolling(window = window_sma).mean()
+    df['SMA_sec'] = df['Close'].rolling(window=window_sma).mean()
     
     # Exponential Moving Average (EMA)
-    df.loc[:, 'EMA_sec'] = df['Close'].ewm(span = window_ema, adjust = False).mean()
+    df['EMA_sec'] = df['Close'].ewm(span=window_ema, adjust=False).mean()
     
-    # Relative Strength Index (RSI)    
+    # Relative Moving Average (RMA)
+    df['RMA_sec'] = df['Close'] / df['EMA_sec']
+    
+    # Relative Strength Index (RSI)
     delta = df['Close'].diff(1)
-    gain = delta.where(delta > 0, 0)
-    loss = -delta.where(delta < 0, 0)
+    gain = (delta.where(delta > 0, 0)).rolling(window=window_rsi).mean()
+    loss = (-delta.where(delta < 0, 0)).rolling(window=window_rsi).mean()
+    rs = gain / loss
+    df['RSI_sec'] = 100 - (100 / (1 + rs))
+
     
-    avg_gain = gain.rolling(window = window_rsi, min_periods = 1).mean()
-    avg_loss = loss.rolling(window = window_rsi, min_periods = 1).mean()
+    # Bollinger Bands, the calculation will automatically create the 3 feature columns for us.
+    df['BBM_sec'] = df['Close'].rolling(window=window_sma).mean()
+    df['BBU_sec'] = df['BBM_sec'] + 2 * df['Close'].rolling(window=window_sma).std()
+    df['BBL_sec'] = df['BBM_sec'] - 2 * df['Close'].rolling(window=window_sma).std()
+
     
-    rs = avg_gain / avg_loss
-    df.loc[:, 'RSI_sec'] = 100 - (100 / (1 + rs))
+    # MACD (Moving Average Convergence Divergence)
+    ema_12 = df['Close'].ewm(span=12, adjust=False).mean()
+    ema_26 = df['Close'].ewm(span=26, adjust=False).mean()
+    df['MACD_sec'] = ema_12 - ema_26
+    df['MACD_Signal_sec'] = df['MACD_sec'].ewm(span=9, adjust=False).mean()
+    df['MACD_Hist_sec'] = df['MACD_sec'] - df['MACD_Signal_sec']
+    
+    # Average Directional Index (ADX)
+    high_low = df['High'] - df['Low']
+    high_close = abs(df['High'] - df['Close'].shift(1))
+    low_close = abs(df['Low'] - df['Close'].shift(1))
+    true_range = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
+
+    plus_dm = df['High'].diff(1).where(lambda x: x > 0, 0)
+    minus_dm = df['Low'].diff(1).where(lambda x: x < 0, 0).abs()
+
+    tr_14 = true_range.rolling(window=14).sum()
+    plus_dm_14 = plus_dm.rolling(window=14).sum()
+    minus_dm_14 = minus_dm.rolling(window=14).sum()
+
+    plus_di = 100 * (plus_dm_14 / tr_14)
+    minus_di = 100 * (minus_dm_14 / tr_14)
+    dx = (abs(plus_di - minus_di) / (plus_di + minus_di)) * 100
+    df['ADX_14_sec'] = dx.rolling(window=14).mean()
+
+    
+    # Commodity Channel Index (CCI)
+    typical_price = (df['High'] + df['Low'] + df['Close']) / 3
+    mean_typical_price = typical_price.rolling(window=20).mean()
+    mean_deviation = (typical_price - mean_typical_price).abs().rolling(window=20).mean()
+    df['CCI_20_sec'] = (typical_price - mean_typical_price) / (0.015 * mean_deviation)
+
+    
+    # Average True Range (ATR)
+    high_low = df['High'] - df['Low']
+    high_close = abs(df['High'] - df['Close'].shift(1))
+    low_close = abs(df['Low'] - df['Close'].shift(1))
+    true_range = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
+    df['ATR_14_sec'] = true_range.rolling(window=14).mean()
+
+    
+    # Stochastic Oscillator (Stoch)
+    lowest_low = df['Low'].rolling(window=14).min()
+    highest_high = df['High'].rolling(window=14).max()
+    df['Stoch_K_sec'] = 100 * ((df['Close'] - lowest_low) / (highest_high - lowest_low))
+    df['Stoch_D_sec'] = df['Stoch_K_sec'].rolling(window=3).mean()
+
+    
+    # Momentum indicators using different periods
+    df['Momentum_1_sec'] = df['Close'] - df['Close'].shift(1)
+    df['Momentum_3_sec'] = df['Close'] - df['Close'].shift(3)
+    df['Momentum_7_sec'] = df['Close'] - df['Close'].shift(7)
+    df['Momentum_30_sec'] = df['Close'] - df['Close'].shift(30)
+    df['Momentum_50_sec'] = df['Close'] - df['Close'].shift(50)
+
+    
+    # On-Balance Volume (OBV)
+    df['OBV_sec'] = (df['Volume'] * ((df['Close'] > df['Close'].shift(1)).astype(int) - (df['Close'] < df['Close'].shift(1)).astype(int))).cumsum()
+    
+    
     
     return df
 
@@ -96,18 +164,28 @@ def main(config):
     nasdaq100_tickers = get_nasdaq100_tickers()
     all_tickers = list(set(sp500_tickers + nasdaq100_tickers))
     
-    tech_stocks = tech_stocks_filter(all_tickers, valid_sectors, core_tickers)    
+    sec_stocks = sec_stocks_filter(all_tickers, valid_sectors, core_tickers)    
         
     historical_data = {}
     
     successful_tickers = 0
     
-    for stock in tech_stocks:
+    for stock in sec_stocks:
         if successful_tickers >= max_secondary_stocks:
             break
         
         try:
             data = yf.download(stock['ticker'], start = start_date, end = end_date)[['Close', 'Volume', 'Open', 'High', 'Low']]
+            data = data.rename(columns = {
+                'Close' : 'Close_sec',
+                'Volume' : 'Volume_sec',
+                'Open' : 'Open_sec',
+                'High' : 'High_sec',
+                'Low' : 'Low_sec',
+            })
+            
+            print(f"Downloaded data for {stock['ticker']}: \n{data.head()}")
+            
             if data.empty:
                 print(f"No data available for {stock['ticker']}, skipping.")
                 continue
@@ -122,11 +200,13 @@ def main(config):
                 0.05 * data['RSI_sec'] +
                 0.05 * data['Volume']
             )
-            
+            print(f"Composite Score calculate for {stock['ticker']}:\n{data[['Composite_Score']].head()}")
+                        
             historical_data[stock['ticker']] = data
             successful_tickers += 1
+            
         except Exception as e:
-            print(f"Failed to download data for {stock['ticker']}: {e}")
+            print(f"Error processing {stock['ticker']}: {e}")
     
     if not historical_data:
         print("No data was successfully downloaded.")
@@ -144,7 +224,6 @@ def main(config):
         top_indicators = final_indicators_sorted.head(max_secondary_stocks)
         
         secondary_stocks_gen = df_secondary_stocks[df_secondary_stocks['ticker'].isin(top_indicators['ticker'])]
-        secondary_stocks_gen = secondary_stocks_gen.iloc[49:].reset_index(drop = True)
         
         print(secondary_stocks_gen.isna().sum())
         

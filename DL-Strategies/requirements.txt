@@ -12,3 +12,4 @@ ipykernel
 jupyter
 IPython
 plotly
+scipy
