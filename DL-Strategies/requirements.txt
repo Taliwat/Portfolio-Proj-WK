@@ -13,3 +13,6 @@ jupyter
 IPython
 plotly
 scipy
+jupyter_contrib_nbextensions
+notebook
+nbconvert
