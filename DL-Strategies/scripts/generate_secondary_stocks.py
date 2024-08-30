@@ -60,9 +60,6 @@ def calculate_indicators(df, window_sma = 50, window_ema = 50, window_rsi = 14):
     # Exponential Moving Average (EMA)
     df['EMA_sec'] = df['Close'].ewm(span=window_ema, adjust=False).mean()
     
-    # Relative Moving Average (RMA)
-    df['RMA_sec'] = df['Close'] / df['EMA_sec']
-    
     # Relative Strength Index (RSI)
     delta = df['Close'].diff(1)
     gain = (delta.where(delta > 0, 0)).rolling(window=window_rsi).mean()
