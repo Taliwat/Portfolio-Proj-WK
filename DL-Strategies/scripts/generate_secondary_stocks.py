@@ -192,9 +192,8 @@ def main(config):
             
             print(f"Downloaded data for {stock['ticker']}: \n{data.head()}")
             
-            #if data.empty:
-            #    print(f"No data available for {stock['ticker']}, skipping.")
-            #    continue
+            # An important lines here, we will set the active first row to 03-14.  This offsets the initial rolling window from our data entry point of 01-01.
+            data = data[data.index >= '2019-03-14']
             
             data = calculate_indicators(data)
             data = fill_missing_vals(data)
