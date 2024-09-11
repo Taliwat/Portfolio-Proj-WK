@@ -7,9 +7,7 @@ import pandas as pd
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from scripts.utils import load_config
-from sklearn.feature_selection import RFECV
-from sklearn.linear_model import Ridge
-from statsmodels.stats.outliers_influence import variance_inflation_factor
+from sklearn.preprocessing import StandardScaler
 
 
 # core sectors are the divisions that our core stocks below belong to, just going to list them for use later.
@@ -36,6 +34,20 @@ def get_nasdaq100_tickers():
     tables = pd.read_html(url)
     df = tables[4]
     return df['Ticker'].tolist()
+
+# Function to rescale features that need to be rescaled (if needed) for preprocessed data.
+def rescale_features(df):
+    # These 5 columns are being unscaled in the download process when using preprocessed data.  We need to rescale them.
+    cols_to_rescale = ['Close_sec', 'Volume_sec', 'Open_sec', 'High_sec', 'Low_sec']
+        
+    # Initialize the scaler
+    scaler = StandardScaler()
+    
+    df[cols_to_rescale] = scaler.fit_transform(df[cols_to_rescale])
+    
+    print(f"Rescaled columns: {cols_to_rescale}")
+        
+    return df
 
 # Now we will now extract our new features from the pandas-ta library for our technical indicators.
 def calculate_indicators(df, window_sma = 50, window_ema = 50, window_rsi = 14):
@@ -148,6 +160,9 @@ def main(config):
         core_tickers = config['yfinance']['core_tickers']
         df_secondary_stocks = df_secondary_stocks[~df_secondary_stocks['ticker'].isin(core_tickers)]
         
+        # Implement our rescaling function here.
+        df_secondary_stocks = rescale_features(df_secondary_stocks)
+        
     else:
         print("Fetching raw stock data.")
         max_secondary_stocks = config['yfinance']['max_secondary_stocks']
@@ -209,7 +224,7 @@ def main(config):
     # Use the optimized feature list from the config file
     optimized_features = config['yfinance']['optimized_features']
     print(f"Optimized features: {optimized_features}")
-        
+    
     # Calculate the scores for each stock based on optimized features
     stock_scores = df_secondary_stocks.groupby('ticker')[optimized_features].mean()
     print(f"Stock scores:\n{stock_scores.head()}")    

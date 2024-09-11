@@ -49,6 +49,10 @@ yfinance:
     core_stock_preprocessed: 'data/core_stock_preprocessed.csv'
     sec_stock_preprocessed: 'data/sec_stock_preprocessed.csv'
     sec_stock_unscaled: 'data/sec_stock_unscaled.csv'
+    exo_data_unscaled: 'data/exo_data_unscaled.csv'
+    exo_data_preprocessed: 'data/exo_data_preprocessed'
+    core_stock_unscaled: 'data/core_stock_unscaled'
+    secondary_stocks_gen: 'secondary_stocks_gen'
 
 model_params:
   vif_threshold: 15 # To be adjusted as needed
