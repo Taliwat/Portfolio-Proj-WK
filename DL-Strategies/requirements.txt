@@ -15,6 +15,5 @@ plotly
 scipy
 jupyter_contrib_nbextensions
 notebook
-nbconvert
 skforecast
-boruta
+xgboost
