@@ -36,18 +36,18 @@ def get_nasdaq100_tickers():
     return df['Ticker'].tolist()
 
 # Function to rescale features that need to be rescaled (if needed) for preprocessed data.
-def rescale_features(df):
+#def rescale_features(df):
     # These 5 columns are being unscaled in the download process when using preprocessed data.  We need to rescale them.
-    cols_to_rescale = ['Close_sec', 'Volume_sec', 'Open_sec', 'High_sec', 'Low_sec']
+    #cols_to_rescale = ['Close_sec', 'Volume_sec', 'Open_sec', 'High_sec', 'Low_sec']
         
     # Initialize the scaler
-    scaler = StandardScaler()
+    #scaler = StandardScaler()
     
-    df[cols_to_rescale] = scaler.fit_transform(df[cols_to_rescale])
+    #df[cols_to_rescale] = scaler.fit_transform(df[cols_to_rescale])
     
-    print(f"Rescaled columns: {cols_to_rescale}")
+    #print(f"Rescaled columns: {cols_to_rescale}")
         
-    return df
+    #return df
 
 # Now we will now extract our new features from the pandas-ta library for our technical indicators.
 def calculate_indicators(df, window_sma = 50, window_ema = 50, window_rsi = 14):
@@ -161,7 +161,7 @@ def main(config):
         df_secondary_stocks = df_secondary_stocks[~df_secondary_stocks['ticker'].isin(core_tickers)]
         
         # Implement our rescaling function here.
-        df_secondary_stocks = rescale_features(df_secondary_stocks)
+        #df_secondary_stocks = rescale_features(df_secondary_stocks)
         
     else:
         print("Fetching raw stock data.")
