@@ -15,5 +15,4 @@ plotly
 scipy
 jupyter_contrib_nbextensions
 notebook
-skforecast
-xgboost
+mplfinance
