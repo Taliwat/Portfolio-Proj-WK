@@ -221,8 +221,8 @@ def main(config):
         df_secondary_stocks = pd.concat(historical_data.values(), keys = historical_data.keys(), names = ['ticker', 'Date'])
         df_secondary_stocks = df_secondary_stocks.reset_index(level=['ticker', 'Date'])
     
-    # Use the optimized feature list from the config file
-    optimized_features = config['yfinance']['optimized_features']
+    # Use the optimized feature list from the config file (the _genlist one of the top 5)
+    optimized_features = config['yfinance']['optimized_features_for_genlist']
     print(f"Optimized features: {optimized_features}")
     
     # Calculate the scores for each stock based on optimized features
