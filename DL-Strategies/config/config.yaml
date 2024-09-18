@@ -7,11 +7,6 @@ gcp:
 yfinance:
   use_preprocessed: true # If true, use preprocessed, if false, fetch new raw data.
   optimized_features: # List of optimized features we will use for modeling and cointegration based on correlation testing and VIF calculation.
-    - 'Volume_sec'
-    - 'Momentum_30_sec'
-    - 'MACD_Lag_Std_1_3_sec'
-    - 'MACD_Signal_Lag_Std_1_3_sec'
-    - 'MACD_Hist_Lag_Std_1_3_sec'
     - 'ATR_14_Lag_Std_1_3_sec'
     - 'Momentum_1_Lag_Std_1_3_sec'
     - 'Momentum_3_Lag_Std_1_3_sec'
