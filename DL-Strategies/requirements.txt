@@ -16,3 +16,4 @@ scipy
 jupyter_contrib_nbextensions
 notebook
 mplfinance
+networkx
